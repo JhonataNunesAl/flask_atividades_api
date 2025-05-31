@@ -1,6 +1,3 @@
-import pytest
-import os
-import sys
 from config import app, db
 from controllers.atividadeCONTROLLER import atividades_blueprint
 
@@ -12,7 +9,7 @@ def create_app():
 
     return app
 
-if __name__ == '__main__':
+if __name__ == '__main__':  
     # ELE SÓ VAI INICIAR SE TODOS OS BLUEPRINTS INICIAREM TAMBÉM!!!
     app = create_app()  
     app.run(host=app.config["HOST"], port=app.config['PORT'], debug=app.config['DEBUG'])
