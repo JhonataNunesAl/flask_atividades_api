@@ -1,6 +1,5 @@
-from datetime import datetime, date
 from config import db
-
+from services.verificacao_service import verificar_professor
 
 class AtividadeNaoEncontrado(Exception):
     pass
@@ -30,46 +29,45 @@ def listar_atividades():
 def atividade_por_id(id_atividade):
     atividade = Atividades.query.get(id_atividade)
     if not atividade:
-        raise AtividadeNaoEncontrado(f'atividade não encontrado.')
+        raise AtividadeNaoEncontrado(f'Atividade não encontrada.')
     return atividade.to_dict()
 
 def adicionar_atividade(nova_atividade):
-    professor_id=int(nova_atividade['professor_id'])
+    professor_id = int(nova_atividade['professor_id'])
+
+    if not verificar_professor(professor_id):
+        raise AtividadeNaoEncontrado(f'Professor com ID {professor_id} não encontrado.')
+
     atividades = Atividades.query.all()
     for atividade in atividades:
-        if atividade.professor_id == nova_atividade['professor_id'] and atividade.atividade == nova_atividade['atividade']:
-            raise AtividadeNaoEncontrado(f'Atividade já existe para o professor {nova_atividade["professor_id"]} - atividade {nova_atividade["atividade"]}.')
-    
-    nova_atividade = Atividades(
-        professor_id=int(nova_atividade['professor_id']),
-        atividade=nova_atividade['atividade']       
+        if atividade.professor_id == professor_id and atividade.atividade == nova_atividade['atividade']:
+            raise AtividadeNaoEncontrado(f'Atividade já existe para o professor {professor_id} - atividade {nova_atividade["atividade"]}.')
+
+    nova = Atividades(
+        professor_id=professor_id,
+        atividade=nova_atividade['atividade']
     )
 
-    db.session.add(nova_atividade)
+    db.session.add(nova)
     db.session.commit()
     return {"message": "Atividade adicionada com sucesso!"}, 201
 
 def atualizar_atividade(id_atividade, nova_atividade):
     atividade = Atividades.query.get(id_atividade)
     if not atividade:
-        raise AtividadeNaoEncontrado
-    
-    atividades = Atividades.query.all()
-    for atividade_for in atividades:
-        if atividade_for.professor_id == nova_atividade['professor_id'] and atividade_for.atividade == nova_atividade['atividade']:
-            raise AtividadeNaoEncontrado(f'atividade já existe para o professor {nova_atividade["professor_id"]} na atividade {nova_atividade["atividade"]}.')
+        raise AtividadeNaoEncontrado('Atividade não encontrada.')
 
     atividade.atividade = nova_atividade['atividade']
     atividade.professor_id = nova_atividade['professor_id']
     
     db.session.commit()
-    return {"message": "Atividade atualizado com sucesso!"}, 200
+    return {"message": "Atividade atualizada com sucesso!"}, 200
 
 def excluir_atividade(id_atividade):
     atividade = Atividades.query.get(id_atividade)
     if not atividade:
-        raise AtividadeNaoEncontrado(f'Atividade não encontrado.')
+        raise AtividadeNaoEncontrado('Atividade não encontrada.')
 
     db.session.delete(atividade)
     db.session.commit()
-    return {"message": "Atividade excluida com sucesso!"}, 200
+    return {"message": "Atividade excluída com sucesso!"}, 200
